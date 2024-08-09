@@ -2,9 +2,23 @@
 
 ### 一、环境简介
 
+硬件信息：
 - CPU：n100
 - 内存：16G
 - 系统：Ubuntu 20.04
+
+用户管理：
+- `su [user]`：切换用户。不带用户名称时，会尝试切换到root账号；
+- `passwd [user]`：修改某个用户的密码。
+- `id [user]`：查看用户所在用户组信息。不带用户名称时，则查询当前用户所在用户组信息
+- `adduser [user]`：创建新用户（系统生成默认配置）
+- `useradd [options] [user]`：创建新用户（普通用户添加新用户，可自主配置）
+- `usermod [options] [user]`：修改用户相关信息
+- `chown [options]... [owner][:[group]] FILE...`：修改文件所属用户信息
+
+进程管理：
+- `sudo lsof -i :[port]`：查看目标端口号的应用
+- `sudo netstat -a | grep [port]`：查看目标端口号占用情况
 
 ### 二、开机自启
 
