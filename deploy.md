@@ -25,3 +25,9 @@ SuccessExitStatus=143
 WantedBy=multi-user.target
 Alias=n100-server.service
 ```
+
+查看n100-server服务相关状态，命令如下：
+- `systemctl start n100-server.service`：启动服务
+- `systemctl stop n100-server.service`：停止服务
+- `systemctl restart n100-server.service`：重启服务
+- `systemctl status n100-server.service`：服务状态

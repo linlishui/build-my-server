@@ -9,7 +9,6 @@
 - 修改登录方式。解决ERROR 1698 (28000): Access denied for user 'root'@'localhost'报错：
 	- 以管理员身份进入mysql：`sudo mysql`
 	- 修改密码：`alter user 'root'@'localhost' identified with mysql_native_password 'custom_passwd';`
-	- 通过密码形式登录root用户进入mysql：`mysql -u root -p`
 
 
 #### Windows系統安裝Mysql
@@ -54,17 +53,9 @@
 - 输入`ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'custom_passwd';`修改密码
 
 
-#### 常用命令
+#### SQL基础语法
 
-- `show databases;`：列出数据库
-- `select database();`：当前数据库
-- `use [database_name]`：打开数据库
-- `show tables;`：列出数据表
-- `desc [table_name];`：查看表结构
-- `show create table [table_name];`：查看创建表的sql语句
-
-
-数据库中常用SQL语句：
+数据库常用SQL语句：
 ```sql
 -- 创建数据库
 CREATE DATABASE IF NOT EXISTS <database_name>
@@ -74,6 +65,47 @@ CREATE DATABASE IF NOT EXISTS <database_name>
 -- 删除数据库
 DROP DATABASE IF EXISTS <database_name>;
 
+-- 创建数据表
+CREATE TABLE table_name (
+    column1 data_type constraint,
+    column2 data_type constraint,
+    ...
+)
+
 -- 删除数据表
 DROP TABLE IF EXISTS <table_name>;
+
+-- 修改数据表（添加列）
+ALTER TABLE table_name ADD column_name data_type
+
+-- 修改数据表（删除列）
+ALTER TABLE table_name DROP COLUMN column_name
+
 ```
+
+数据表常用SQL语句：
+```sql
+-- 查询数据表
+SELECT column_name(s) FROM table_name WHERE condition ORDER BY column_name [ASC|DESC]
+
+-- 插入数据表
+INSERT INTO table_name (column1, column2, ...) VALUES (value1, value2, ...)
+
+-- 更新数据表
+UPDATE table_name SET (column1 = value1, column2 = value2, ...) WHERE condition
+
+-- 删除数据表
+DELETE FROM table_name WHERE condition
+```
+
+#### 常用命令
+
+- 通过密码形式登录，以root用户进入mysql：`mysql -u root -p`
+- `show databases;`：列出数据库
+- `select database();`：当前数据库
+- `use [database_name]`：打开数据库
+- `show tables;`：列出数据表
+- `desc [table_name];`：查看表结构
+- `show create table [table_name];`：查看创建表的sql语句
+
+
