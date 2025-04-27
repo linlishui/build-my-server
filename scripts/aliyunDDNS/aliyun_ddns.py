@@ -2,6 +2,7 @@
 #coding=utf-8
 
 import os
+import sys
 import time
 import json
 import urllib
@@ -11,33 +12,46 @@ from aliyunsdkcore.acs_exception.exceptions import ClientException
 from aliyunsdkcore.acs_exception.exceptions import ServerException
 from aliyunsdkalidns.request.v20150109 import DescribeSubDomainRecordsRequest, AddDomainRecordRequest, UpdateDomainRecordRequest, DeleteDomainRecordRequest
  
-configPath = '/home/user/data/script/aliyunDDNS/ddns_config.json'
-logFilePath = '/home/user/data/script/aliyunDDNS/operation_ddns.log'
-  
-# 初始化阿里云配置
-with open(configPath, 'r', encoding='utf-8') as file:  
-    envConfig = json.load(file)  
-print(envConfig)  
+CONFIG_PATH = '/home/user/data/script/aliyunDDNS/ddns_config.json'
+OP_LOG_PATH = '/home/user/data/script/aliyunDDNS/operation_ddns.log'
 
-## 建议使用 RAM 子账户的 KEY 和 SECRET 增加安全性
-AccessKey = envConfig['access_key_id']
-Secret = envConfig['access_key_secret']
-RegionId = envConfig['region_id']
-DomainName = envConfig['domain_name']
 
-client = AcsClient(AccessKey, Secret, RegionId)
+# 全局阿里云客户端实例 (初始化为安全状态)
+client = None
 
- 
-# 子域名列表
-SubDomainList = ['www','@']
- 
+clientDomainName = None
+
+try:
+    # 配置文件加载与解析
+    with open(CONFIG_PATH, 'r', encoding='utf-8') as file:
+        envConfig = json.load(file)
+    
+    # 敏感配置项提取（集中校验）
+    required_keys = ['access_key_id', 'access_key_secret', 'region_id', 'domain_name']
+    if not all(key in envConfig for key in required_keys):
+        raise KeyError("缺少必要配置字段")
+    
+    # 客户端初始化（含参数校验）
+    client = AcsClient(
+        envConfig['access_key_id'],
+        envConfig['access_key_secret'],
+        envConfig['region_id']
+    )
+
+    clientDomainName = envConfig['domain_name']
+    
+except Exception as e:  # 统一异常拦截
+    print(f"配置解析失败: {str(e)}")
+    sys.exit(1)
+
+
 # 获取Ipv4公网地址
-def getIPv4():
+def getIPv4() -> str:
   ipv4 = json.load(urllib.request.urlopen('https://api.ipify.org/?format=json'))['ip']
   return ipv4
 
 # 获取Ipv6公网地址
-def getIPv6():
+def getIPv6() -> str:
   ipv6 = json.load(urllib.request.urlopen('https://ipv6.lookup.test-ipv6.com'))['ip']
   return ipv6
  
@@ -74,7 +88,7 @@ def addDomainRecord(client,value,rr,domainname):
   return relsult
  
 # 更新DNS记录
-def updateDomainRecord(client,value,rr,record_id):
+def updateDomainRecord(client,value,rr,record_id) -> str:
   request = UpdateDomainRecordRequest.UpdateDomainRecordRequest()
   request.set_accept_format('json')
  
@@ -90,7 +104,7 @@ def updateDomainRecord(client,value,rr,record_id):
   return response
  
 # 删除DNS记录
-def delDomainRecord(client,subdomain):
+def delDomainRecord(client,subdomain) -> str:
   info = getDomainInfo(subdomain)
   if info['TotalCount'] == 0:
     print('没有相关的记录信息，删除失败！')
@@ -109,7 +123,7 @@ def delDomainRecord(client,subdomain):
     print("存在多个相同子域名解析记录值，请核查后再操作！")
  
 # 有记录则更新，没有记录则新增
-def setDomainRecord(client,value,rr,domainname):
+def setDomainRecord(client,value,rr,domainname) -> str:
 
   logPrefix = '操作时间：' + time.asctime(time.localtime(time.time())) + '\n'
   logContent = '操作结果：'
@@ -140,30 +154,38 @@ def setDomainRecord(client,value,rr,domainname):
 
   return logPrefix + logContent
 
+def main():
 
-#### 执行相关操作
+  # 子域名列表
+  SubDomainList = ['www','@']
 
-IPv4 = getIPv4()
- 
-# 循环子域名列表进行批量操作
-lines = 'DomainName=' + DomainName
-for subdomain in SubDomainList:
-  recordLog = setDomainRecord(client,IPv4,subdomain,DomainName)
-  lines = lines + '\n subdomain=' + subdomain + '\n' + recordLog
+  # 获取外网ip地址
+  IPv4 = getIPv4()
+  
+  # 循环子域名列表进行批量操作
+  lines = 'clientDomainName=' + clientDomainName + '\n'
+  for subdomain in SubDomainList:
+    recordLog = setDomainRecord(client,IPv4,subdomain,clientDomainName)
+    lines = lines + 'subdomain=' + subdomain + '\n' + recordLog
 
-# 将操作记录到本地
-with open(logFilePath, 'w', encoding='utf-8') as logFile:
-  logFile.writelines(lines)
- 
-# 删除记录测试
-# delDomainRecord(client,subdomain)
- 
-# 新增或更新记录测试
-# setDomainRecord(client,'192.168.1.123','recordId',DomainName)
- 
-# 批量获取记录测试
-# for x in SubDomainList:
-#   print (getDomainInfo(DomainName, x))
- 
-# 获取外网ip地址测试
-# print ('(' + getIPv4() + ')')
+  # 将操作记录到本地
+  with open(OP_LOG_PATH, 'w', encoding='utf-8') as logFile:
+    logFile.writelines(lines)
+  
+  # 删除记录测试
+  # delDomainRecord(client,subdomain)
+  
+  # 新增或更新记录测试
+  # setDomainRecord(client,'192.168.1.123','recordId',DomainName)
+  
+  # 批量获取记录测试
+  # for x in SubDomainList:
+  #   print (getDomainInfo(DomainName, x))
+  
+  # 获取外网ip地址测试
+  # print ('(' + getIPv4() + ')')
+
+
+# 适合模块测试，当导入给其它模块，此条件为False
+if __name__ == '__main__':
+    main()
