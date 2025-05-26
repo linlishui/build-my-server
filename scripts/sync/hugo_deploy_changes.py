@@ -42,7 +42,6 @@ logger = logging.getLogger(__name__)
 
 
 
-
 class GitSyncError(Exception):
     """自定义异常基类"""
     pass
@@ -78,7 +77,7 @@ def deploy_changes(repo_path: Path) -> None:
             "error": "清理失败"
         },
         {
-            "cmd": ["hugo"],
+            "cmd": ["/usr/local/bin/hugo", "--source", str(repo_path)],
             "desc": "生成静态资源",
             "error": "Hugo构建失败"
         },
@@ -188,14 +187,14 @@ def write_hash_file(file_path: Path, commit_hash: str) -> None:
         raise FileOperationError(error_msg) from e
 
 def git_pull(repo_path: Path) -> None:
-    """执行git pull操作"""
+    """执行git pull（超时结束）"""
     try:
         result = subprocess.run(
-            ['git', 'pull'],
+            ["git", "pull"],
             cwd=repo_path,
-            check=True,
             capture_output=True,
-            text=True
+            text=True,
+            timeout=30
         )
         logger.info(f"Git pull成功: {result.stdout.strip()}")
     except subprocess.CalledProcessError as e:

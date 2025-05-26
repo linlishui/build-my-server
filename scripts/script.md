@@ -68,3 +68,29 @@ m h  dom mon dow   command
 这里仅针对该台Windows客户端临时解决路由回流，步骤如下：
 1. 进入`C:\Windows\System32\drivers\etc`目录，打开`hosts`文件
 2. 在文本末尾增加域名与ip的映射关系。示例：`192.168.1.1   example.com`
+
+
+### hugo定时更新与部署
+
+脚本名称：**hugo_deploy_changes.py**
+
+工作流程：
+- 周期性获取hugo-site仓库下最近一次提交的hash值，与脚本所在目录保存的hash值进行比对，若一致则中断流程
+- 触发hugo-site的仓库 git pull 操作来更新内容
+- 开始清理已有的 public 目录，同时进行 hugo 部署
+- hugo 部署成功以后，触发 nginx reload 操作
+
+执行 nginx 需要 sudo 权限，可以针对 nginx reload 操作进行权限豁免，操作如下：
+- 使用visudo编辑文件：`sudo visudo -f /etc/sudoers.d/hugo_deploy_changes`
+- 在 hugo_deploy_changes 添加内容：`user ALL=(root) NOPASSWD: /usr/sbin/nginx -s reload`
+- 添加完内容以后，按 "Ctrl+O" 触发保存，再按 "Enter" 完成保存，接着 "Ctrl+X" 退出编辑
+
+
+定时任务示例：
+```bash
+# 编辑定时任务
+crontab -e
+
+# 每小时触发 hugo deploy changes 任务
+*/60 * * * * python3 /home/user/data/script/hugo/hugo_deploy_changes.py /home/user/library/hugo-site
+```
