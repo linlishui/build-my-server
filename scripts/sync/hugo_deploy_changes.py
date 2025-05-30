@@ -82,7 +82,7 @@ def deploy_changes(repo_path: Path) -> None:
             "error": "Hugo构建失败"
         },
         {
-            "cmd": ["sudo", "nginx", "-s", "reload"],
+            "cmd": ["sudo", "/usr/sbin/nginx", "-s", "reload"],
             "desc": "重载Nginx配置",
             "error": "Nginx重载失败"
         }
@@ -208,6 +208,9 @@ def process_repository(target_dir: str) -> None:
         repo_path = validate_directory(target_dir)
         logger.info(f"处理仓库: {repo_path}")
         
+        logger.info("正在同步远端内容...")
+        git_pull(repo_path)
+
         hash_file = get_hash_file_path(repo_path)
         logger.debug(f"使用的哈希文件: {hash_file}")
         
@@ -218,8 +221,7 @@ def process_repository(target_dir: str) -> None:
         logger.info(f"存储的哈希: {stored_hash[:8] + '...' if stored_hash else '无'}")
         
         if current_hash != stored_hash:
-            logger.info("检测到哈希变化，执行更新...")
-            git_pull(repo_path)
+            logger.info("检测到哈希变化，更新当前哈希记录文件...")
             write_hash_file(hash_file, current_hash)
             logger.info("仓库和哈希文件更新完成")
 
