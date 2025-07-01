@@ -68,6 +68,7 @@ def deploy_changes(repo_path: Path) -> None:
     1. 清理旧构建文件
     2. 生成静态资源
     3. 重载Nginx配置
+    4. 同步到GitHub
     """
     logger.info("启动部署流程")
     commands = [
@@ -85,6 +86,11 @@ def deploy_changes(repo_path: Path) -> None:
             "cmd": ["sudo", "/usr/sbin/nginx", "-s", "reload"],
             "desc": "重载Nginx配置",
             "error": "Nginx重载失败"
+        },
+        {
+            "cmd": ["/home/user/data/script/hugo/sync_public_to_github.sh", str(repo_path)], 
+            "desc": "同步到GitHub仓库", 
+            "error": "GitHub同步public失败"
         }
     ]
 
