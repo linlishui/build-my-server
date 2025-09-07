@@ -1,5 +1,6 @@
 
 
-0. [脚本相关](./scripts/script.md)
-1. [Ubuntu相关](./ubuntu.md)
-2. [nginx相关](./nginx.md)
+- [脚本相关](./scripts/script.md)
+- [Ubuntu入门](./init_ubuntu.md)
+- [Ubuntu搭建服务器相关](./ubuntu_server.md)
+- [nginx相关](./nginx.md)
